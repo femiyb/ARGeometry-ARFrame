@@ -1,7 +1,9 @@
+/* General Styles */
 body {
     margin: 0;
     overflow: hidden;
     background-color: #000;
+    font-family: Arial, sans-serif; /* Use a clean font */
 }
 
 #button-container {
@@ -14,11 +16,13 @@ body {
     padding: 10px;
     border-radius: 8px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
 }
 
 button {
     padding: 10px 15px;
-    margin: 5px;
+    margin: 5px 0; /* Adjust margin */
     font-size: 16px;
     cursor: pointer;
     border: none;
@@ -26,6 +30,7 @@ button {
     color: white;
     border-radius: 5px;
     transition: background-color 0.3s ease;
+    width: 100%; /* Make buttons full-width */
 }
 
 button:hover {
@@ -33,70 +38,142 @@ button:hover {
 }
 
 a-scene {
-    position: relative;
-    z-index: 10; /* Ensure it appears above other elements */
+    position: fixed; 
+    z-index: 10;
     width: 100%;
     height: 100vh; /* Full viewport height */
 }
+
 #volume-calculator {
     position: fixed;
     top: 100px;
     right: 20px;
     background-color: rgba(255, 255, 255, 0.9);
-    padding: 10px;
+    padding: 15px;
     border-radius: 8px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     z-index: 1000;
+    max-width: 300px; /* Constrain the width */
+    text-align: center; /* Center align */
 }
 
 #volume-calculator input, select {
     margin: 5px 0;
+    width: 90%; /* Make input fields full-width */
 }
 
-/* Style for the quiz container */
+#volume-calculator button {
+    padding: 8px;
+    font-size: 14px;
+}
+
 #quiz-container {
-    position: fixed; /* Ensure the container stays in one place */
-    bottom: 20px;    /* Position it at the bottom of the screen */
-    left: 50%;       /* Center it horizontally */
-    transform: translateX(-50%); /* Adjust to center correctly */
-    background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent background */
+    position: fixed;
+    bottom: 20px; /* Adjust for better positioning */
+    left: 50%; 
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.9);
     padding: 15px;
     border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
-    z-index: 1000;  /* Make sure it's above other elements */
-    width: 300px;   /* Adjust the width as needed */
-    text-align: center; /* Center the text */
-    display: none;  /* Start as hidden */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    width: 320px; /* Set a max-width */
+    text-align: center;
 }
 
-/* Style the quiz buttons */
 #quiz-container button {
-    margin: 5px;
-    padding: 10px;
+    width: 100%; /* Full width */
+    padding: 8px;
+    margin: 5px 0;
     font-size: 14px;
-    cursor: pointer;
-    background-color: #4CC3D9; /* Same color as other buttons */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
 }
 
-#quiz-container button:hover {
-    background-color: #2c98b3; /* Darker shade on hover */
-}
-
-/* Style for the feedback text */
 #quiz-feedback {
     margin-top: 10px;
     font-weight: bold;
+    font-size: 14px;
 }
 
-/* CSS for proper layering */
 #overlay {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 5; /* Ensure it's above the video but below the A-Frame scene */
-    pointer-events: none; /* Prevents the canvas from blocking interactions */
+    z-index: 5;
+    pointer-events: none; 
+    width: 100%; 
+    height: 100vh; 
+}
+
+/* Mobile-Specific Adjustments */
+@media only screen and (max-width: 600px) {
+    #button-container {
+        width: 80%;
+        left: 10%; /* Center it better */
+    }
+
+    button {
+        padding: 8px; 
+        font-size: 14px;
+    }
+
+    #volume-calculator {
+        top: 15%; 
+        right: 5%;
+        left: 5%;
+        width: auto;
+        max-width: 90%; 
+        font-size: 14px;
+    }
+
+    #quiz-container {
+        width: 90%; 
+        bottom: 10%; 
+        left: 5%; 
+        transform: translateX(0); 
+    }
+
+    #quiz-container button {
+        font-size: 14px;
+        padding: 8px; 
+    }
+}
+
+/* Desktop-Specific Adjustments */
+@media only screen and (min-width: 601px) {
+    #button-container {
+        flex-direction: row; /* Display buttons in a row */
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    button {
+        margin: 0 5px; /* Adjust margins for better spacing */
+        padding: 10px 20px;
+        font-size: 16px;
+    }
+
+    #volume-calculator {
+        top: 120px;
+        right: 20px;
+        left: auto;
+        max-width: 350px; /* Constrain max-width for larger screens */
+        padding: 15px;
+        font-size: 16px;
+    }
+
+    #quiz-container {
+        bottom: 30px;
+        width: 350px; 
+    }
+
+    #quiz-container button {
+        padding: 10px; 
+        font-size: 16px;
+    }
+
+    #overlay {
+        width: 100%;
+        height: 100vh; 
+    }
 }
