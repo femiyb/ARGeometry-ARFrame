@@ -4,19 +4,15 @@ let currentShape = ''; // Default to no shape
 let shapeObjects = []; // Array to store all loaded shapes
 let currentIndex = -1; // Index of the currently selected shape
 
-
-
 // Function to load a shape into the AR scene
 function loadShape(shapeType) {
     if (currentShape === shapeType) return;
 
     const shapeContainer = document.getElementById('shape-container');
-    shapeContainer.innerHTML = ''; // Clear any existing shapes
+    shapeContainer.innerHTML = ''; 
 
     let shapeEntity;
     let shapeProperties = {};
-
-   
 
     switch (shapeType) {
         case 'box':
@@ -37,7 +33,7 @@ function loadShape(shapeType) {
             shapeEntity.setAttribute('width', '1');
             shapeEntity.setAttribute('material', 'src: #wood-texture');
             shapeEntity.setAttribute('sound', 'on: click; src: #box-sound');
-            speak('You have loaded a box. It is a three-dimensional shape with length, width, and height.');
+          //  speak('You have loaded a box. It is a three-dimensional shape with length, width, and height.');
             break;
 
         case 'sphere':
@@ -55,7 +51,7 @@ function loadShape(shapeType) {
             shapeEntity.setAttribute('color', shapeProperties.color);
             shapeEntity.setAttribute('material', 'src: #metal-texture');
             shapeEntity.setAttribute('sound', 'on: click; src: #sphere-sound');
-            speak('You have loaded a sphere. It is a round, three-dimensional shape.');
+           // speak('You have loaded a sphere. It is a round, three-dimensional shape.');
             break;
 
         case 'cylinder':
@@ -73,7 +69,7 @@ function loadShape(shapeType) {
             shapeEntity.setAttribute('height', '1.5');
             shapeEntity.setAttribute('color', shapeProperties.color);
             shapeEntity.setAttribute('sound', 'on: click; src: #cylinder-sound');
-            speak('You have loaded a cylinder. It is a three-dimensional shape with a circular base.');
+           // speak('You have loaded a cylinder. It is a three-dimensional shape with a circular base.');
             break;
 
         default:
@@ -91,12 +87,9 @@ function loadShape(shapeType) {
     tooltip.setAttribute('visible', 'false'); // Hide it initially
 
     // Add hover events to show/hide the tooltip
-    shapeEntity.addEventListener('mouseenter', () => {
-        tooltip.setAttribute('visible', 'true');
-    });
-    shapeEntity.addEventListener('mouseleave', () => {
-        tooltip.setAttribute('visible', 'false');
-    });
+  shapeEntity.addEventListener('mouseenter', () => tooltip.setAttribute('visible', 'true'));
+shapeEntity.addEventListener('mouseleave', () => tooltip.setAttribute('visible', 'false'));
+
     // Add an event listener to show the explanation when the shape is clicked
     shapeEntity.addEventListener('click', () => {
         speak(shapeProperties.explanation);
@@ -107,6 +100,8 @@ function loadShape(shapeType) {
         speak(shapeProperties.explanation);
     });
 
+    document.getElementById('current-shape').innerText = shapeProperties.shape;
+    document.getElementById('current-formula').innerText = shapeProperties.formula;
 
     // Append the shape and tooltip to the container
     shapeContainer.appendChild(shapeEntity);
@@ -125,6 +120,7 @@ function loadShape(shapeType) {
     // Show the volume calculator and update it
     updateVolumeCalculator();
     document.getElementById('volume-calculator').style.display = 'block';
+    
 }
 
 // Function to update the appearance of the currently selected object
@@ -162,11 +158,22 @@ function checkAnswer(answer) {
 
 // Function to update the volume calculator based on the current shape
 function updateVolumeCalculator() {
-    // Set the dropdown to the current shape
-    document.getElementById('shape-select').value = currentShape;
+    // Use the currentShape variable to determine the active shape
+    const shape = currentShape;
 
-    // Display the appropriate input fields
-    showFormula();
+    // Hide all input fields initially
+    document.querySelectorAll('.shape-inputs').forEach((el) => el.style.display = 'none');
+
+    // Display the appropriate input fields based on the current shape
+    if (shape === 'box') {
+        document.getElementById('box-inputs').style.display = 'block';
+    } else if (shape === 'sphere') {
+        document.getElementById('sphere-inputs').style.display = 'block';
+    } else if (shape === 'cylinder') {
+        document.getElementById('cylinder-inputs').style.display = 'block';
+    } else {
+        console.warn('Unknown shape type, no inputs to display.');
+    }
 }
 
 // Function to clear all shapes from the AR scene
@@ -322,10 +329,85 @@ document.addEventListener('keydown', (event) => {
             break;
     }
 });
+
+// Global flag to track if detection is active
+let detectionActive = false;
+let isOpenCVLoaded = false; // Track if OpenCV is already loaded
+
+// Function to dynamically load OpenCV.js
+function loadOpenCV() {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://docs.opencv.org/5.x/opencv.js'; // OpenCV library URL
+        script.type = 'text/javascript';
+        script.defer = true;
+
+        script.onload = () => resolve(); // Resolve the promise when loaded
+        script.onerror = (err) => reject(err); // Reject the promise if loading fails
+
+        document.head.appendChild(script); // Add the script to the document
+    });
+}
+
+// Function to toggle detection
+function toggleDetection() {
+    const detectionButton = document.getElementById('toggle-detection-btn');
+
+    if (!detectionActive) {
+        detectionActive = true;
+        detectionButton.innerText = 'Stop Detection';
+        console.log('Detection started');
+
+        // Load OpenCV if it hasn't been loaded yet
+        if (!isOpenCVLoaded) {
+            loadOpenCV().then(() => {
+                console.log('OpenCV loaded successfully');
+                isOpenCVLoaded = true; // Mark OpenCV as loaded
+                // Wait for OpenCV to fully initialize
+                cv['onRuntimeInitialized'] = () => {
+                    console.log('OpenCV is fully initialized');
+                    startDetection(); // Start detection once OpenCV is loaded and initialized
+                };
+            }).catch((err) => {
+                console.error('Failed to load OpenCV:', err);
+                detectionActive = false;
+                detectionButton.innerText = 'Start Detection';
+            });
+        } else {
+            startDetection(); // Start detection immediately if OpenCV is already loaded and initialized
+        }
+    } else {
+        detectionActive = false;
+        detectionButton.innerText = 'Start Detection';
+        console.log('Detection stopped');
+        stopDetection();
+    }
+}
+
+
+// Start detection (Object and Shape detection)
+function startDetection() {
+    if (detectionActive && isOpenCVLoaded) {
+        detectObjectsWithTensorFlow();
+        detectShapes(); // Start OpenCV shape detection
+    }
+}
+
+// Stop detection by canceling future detection loops
+function stopDetection() {
+    // Here you can stop or clean up any ongoing detection processes
+    console.log('Detection is paused');
+}
+
 // Load TensorFlow.js and OpenCV.js
 let model; // Variable to store the TensorFlow model
 
 // Load COCO-SSD model for generic object detection
+cocoSsd.load().then((loadedModel) => {
+    model = loadedModel;
+    console.log('COCO-SSD model loaded successfully');
+    startCamera(); // Start the camera feed
+});
 
 // Function to start the camera feed
 function startCamera() {
@@ -376,21 +458,25 @@ function detectObjectsWithTensorFlow() {
 
     if (model) {
         model.detect(video).then((predictions) => {
+            if (!detectionActive) return; // Stop if detection is inactive
+
             // Log detected objects
             if (predictions.length === 0) {
                 console.log('No objects detected by TensorFlow');
             } else {
                 predictions.forEach((prediction) => {
                     console.log(`Detected by TensorFlow: ${prediction.class}, Confidence: ${(prediction.score * 100).toFixed(2)}%`);
-                    
-                    // Check if the detected object is cube-like, sphere-like, or cylinder-like
-                    if (prediction.class === 'cup' || prediction.class === 'bottle' || prediction.class === 'book') {
-                        console.log('Detected a cube-like/cylinder-like object!');
-                        loadShape('box'); // Display a cube or cylinder shape in AR
-                    }
-                    if (prediction.class === 'sports ball' || prediction.class === 'orange') {
-                        console.log('Detected a spherical object!');
-                        loadShape('sphere'); // Display a sphere shape in AR
+                    if (detectionActive) {
+
+                        // Check if the detected object is cube-like, sphere-like, or cylinder-like
+                        if (prediction.class === 'cup' || prediction.class === 'bottle' || prediction.class === 'book') {
+                            console.log('Detected a cube-like/cylinder-like object!');
+                            loadShape('box'); // Display a cube or cylinder shape in AR
+                        }
+                        if (prediction.class === 'sports ball' || prediction.class === 'orange') {
+                            console.log('Detected a spherical object!');
+                            loadShape('sphere'); // Display a sphere shape in AR
+                        }
                     }
                 });
             }
@@ -399,12 +485,16 @@ function detectObjectsWithTensorFlow() {
         });
     }
 
-    // Continue running TensorFlow detection at a regular interval
-    setTimeout(detectObjectsWithTensorFlow, 500); // Adjust this interval for optimal performance
+   // Continue detecting objects if detection is active
+   if (detectionActive) {
+    setTimeout(detectObjectsWithTensorFlow, 500); // Adjust the interval for performance
+    }
 }
 
 // Function to detect shapes using OpenCV
 function detectShapes() {
+    if (!detectionActive) return; // Stop if detection is inactive
+
     const video = document.getElementById('webcam');
     const canvas = document.getElementById('overlay');
     const context = canvas.getContext('2d');
@@ -494,7 +584,9 @@ function detectShapes() {
     contours.delete();
     hierarchy.delete();
 
-    requestAnimationFrame(detectShapes); // Continue detecting
+    if (detectionActive) {
+        requestAnimationFrame(detectShapes); // Continue detecting shapes if detection is active
+    }
 }
 
 // Function to draw the detected shape on the canvas
@@ -517,23 +609,4 @@ function drawShape(context, contour, shapeName, color) {
     context.fillStyle = color;
     context.fillText(shapeName, contour.data32S[0], contour.data32S[1] - 10); // Display the name of the shape
 }
-
-
-// Make sure OpenCV.js is ready and then start the process
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait for OpenCV to finish initializing
-    cv['onRuntimeInitialized'] = () => {
-        console.log('OpenCV is fully initialized!');
-
-        // Load the TensorFlow model
-        cocoSsd.load().then((loadedModel) => {
-            model = loadedModel;
-            console.log('COCO-SSD model loaded successfully');
-            startCamera(); // Start your camera and AR logic here
-        }).catch(error => {
-            console.error('Error loading TensorFlow model:', error);
-        });
-    };
-});
-
 
